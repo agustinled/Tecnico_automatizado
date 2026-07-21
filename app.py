@@ -5,7 +5,7 @@ from datetime import datetime
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
-    page_title="TÉCNICO AUTOMÁTICO DE VIDEO",
+    page_title="TECNICO AUTOMATIZADO",
     page_icon="📺",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -13,17 +13,17 @@ st.set_page_config(
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- ESTILOS CSS PERSONALIZADOS + ANIMACIÓN SLIDE-IN EN BARRA LATERAL ---
+# --- ESTILOS CSS PERSONALIZADOS ---
 st.markdown("""
 <style>
-    /* Fondo General */
+    /* Fondo General Verde #006414 */
     .stApp {
-        background-color: #0b0e14;
-        color: #e2e8f0;
+        background-color: #006414 !important;
+        color: #ffffff !important;
         font-family: 'Segoe UI', -apple-system, Roboto, sans-serif;
     }
     
-    /* ANIMACIÓN DE TRANSICIÓN DE IZQUIERDA A DERECHA EN BARRA LATERAL */
+    /* Animación de entrada menú lateral */
     @keyframes slideInLeft {
         from {
             transform: translateX(-100%);
@@ -35,21 +35,38 @@ st.markdown("""
         }
     }
 
+    /* Fondo de la Barra Lateral desplegable */
     section[data-testid="stSidebar"] {
-        background-color: #111622 !important;
-        border-right: 1px solid #1e2638 !important;
+        background-color: #004d0f !important;
+        border-right: 2px solid #00330a !important;
         animation: slideInLeft 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Estilo del menú radio en la barra lateral (Más grande y separado) */
+    div[data-testid="stSidebar"] label {
+        color: #ffffff !important;
+    }
+    
+    /* Agrandar y separar las opciones del menú desplegable */
+    div[data-testid="stSidebar"] div[role="radiogroup"] > label {
+        padding: 12px 10px !important;
+        margin-bottom: 8px !important;
+        border-radius: 8px !important;
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        font-size: 1.15rem !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.5px !important;
     }
 
     /* Header Principal */
     .header-box {
-        background: linear-gradient(135deg, #141a29 0%, #0d111a 100%);
-        border-bottom: 3px solid #2563eb;
+        background: #00420d;
+        border-bottom: 3px solid #00ff33;
         border-radius: 10px;
         padding: 18px;
         text-align: center;
         margin-bottom: 25px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     }
     .header-title {
         font-family: 'Arial Black', sans-serif;
@@ -62,42 +79,42 @@ st.markdown("""
 
     /* Tarjetas KPI de Métricas */
     .kpi-card {
-        background: #161c2e;
-        border-left: 4px solid #2563eb;
+        background: #00420d;
+        border-left: 4px solid #00ff33;
         border-radius: 6px;
         padding: 12px;
         margin-bottom: 10px;
     }
     .kpi-label {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #b3ffc2;
         text-transform: uppercase;
         font-weight: 700;
         letter-spacing: 1px;
     }
     .kpi-value {
         font-size: 1.25rem;
-        color: #f8fafc;
+        color: #ffffff;
         font-weight: 800;
         font-family: 'Courier New', monospace;
     }
 
     /* Alertas de Stock */
     .alert-ok {
-        background-color: rgba(16, 185, 129, 0.1);
-        border: 2px solid #10b981;
+        background-color: rgba(0, 255, 51, 0.15);
+        border: 2px solid #00ff33;
         border-radius: 8px;
-        color: #34d399;
+        color: #ffffff;
         padding: 15px;
         text-align: center;
         font-size: 1.1rem;
         font-weight: 800;
     }
     .alert-error {
-        background-color: rgba(239, 68, 68, 0.1);
-        border: 2px solid #ef4444;
+        background-color: rgba(255, 0, 0, 0.2);
+        border: 2px solid #ff4d4d;
         border-radius: 8px;
-        color: #f87171;
+        color: #ffffff;
         padding: 15px;
         text-align: center;
         font-size: 1.1rem;
@@ -106,17 +123,25 @@ st.markdown("""
 
     /* Bloques Taller */
     .taller-card {
-        background: #141a28;
-        border: 1px solid #232d42;
+        background: #00420d;
+        border: 1px solid #00801a;
         border-radius: 8px;
         padding: 12px;
         margin-bottom: 15px;
     }
     .taller-title {
-        color: #38bdf8;
+        color: #66ff85;
         font-weight: 800;
         font-size: 1.1rem;
         margin-bottom: 10px;
+    }
+    
+    /* Contenedores de inputs */
+    div[data-testid="stVerticalBlock"] > div {
+        background-color: #004d0f;
+        border: 1px solid #00801a;
+        border-radius: 8px;
+        padding: 12px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -273,34 +298,34 @@ def ver_salones():
         txt += f"• [{row[4]}] SECTOR: {row[0]} ➔ {row[1]}: {row[2]} gabs ({row[3]:.2f} m²)\n"
     return txt
 
-# --- BARRA LATERAL DESPLEGABLE CON ANIMACIÓN (SIDEBAR) ---
+# --- BARRA LATERAL DESPLEGABLE (SIDEBAR) ---
 with st.sidebar:
-    st.markdown("### 🛠️ CONSOLA DE NAVEGACIÓN")
+    st.markdown("## MENU")
     st.markdown("---")
     opcion_menu = st.radio(
-        "Seleccionar Módulo:",
-        ["🧮 Calculador y Asignaciones", "📦 Stock en Tiempo Real", "🛠️ Gestión de Taller"],
-        index=0
+        "Navegación:",
+        ["CALCULADORA DE PANTALLA", "STOCK", "GESTION TALLER LED"],
+        index=0,
+        label_visibility="collapsed"
     )
     st.markdown("---")
-    st.caption("SISTEMA CONTROL DE VIDEO v2.5")
-    st.caption("Depósito LED & Taller")
+    st.caption("SISTEMA CONTROL DE VIDEO v3.0")
 
 # --- ENCABEZADO PRINCIPAL ---
 st.markdown("""
 <div class="header-box">
-    <h1 class="header-title">TÉCNICO AUTOMÁTICO DE VIDEO</h1>
+    <h1 class="header-title">TECNICO AUTOMATIZADO</h1>
 </div>
 """, unsafe_allow_html=True)
 
-# --- VISTA 1: CALCULADOR ---
-if opcion_menu == "🧮 Calculador y Asignaciones":
+# --- VISTA 1: CALCULADORA DE PANTALLA ---
+if opcion_menu == "CALCULADORA DE PANTALLA":
     col1, col2 = st.columns([1, 1])
     
     with col1:
         st.markdown("##### Configuración de Pantalla")
-        txt_salon = st.selectbox("Ubicación / Salón de Destino", ["SUR", "SUR LUXURY", "CENTRAL", "NORTE", "NORTE LUXURY", "GRAN SALÓN"])
-        tipo = st.selectbox("Modelo de Partida LED", ["ROMBO", "PIKA", "UNI 500", "UNI 1000", "BLACKFACE", "NUEVA NUEVA"], index=1)
+        txt_salon = st.selectbox("Selecciona el salón", ["SUR", "SUR LUXURY", "CENTRAL", "NORTE", "NORTE LUXURY", "GRAN SALÓN"])
+        tipo = st.selectbox("Selecciona partida de pantalla", ["ROMBO", "PIKA", "UNI 500", "UNI 1000", "BLACKFACE", "NUEVA NUEVA"], index=1)
         modo = st.radio("Unidad de Medida de Entrada", ["Metros (m)", "Píxeles (px)"], horizontal=True)
         
         c_ancho, c_alto = st.columns(2)
@@ -394,7 +419,7 @@ if opcion_menu == "🧮 Calculador y Asignaciones":
             st.error("No se puede registrar: Stock insuficiente.")
 
 # --- VISTA 2: STOCK ---
-elif opcion_menu == "📦 Stock en Tiempo Real":
+elif opcion_menu == "STOCK":
     col_stock1, col_stock2 = st.columns(2)
     with col_stock1:
         st.markdown("##### Monitoreo de Depósito")
@@ -413,8 +438,8 @@ elif opcion_menu == "📦 Stock en Tiempo Real":
             st.toast("Base de datos reseteada para la nueva semana!")
             st.rerun()
 
-# --- VISTA 3: TALLER ---
-elif opcion_menu == "🛠️ Gestión de Taller":
+# --- VISTA 3: GESTION TALLER LED ---
+elif opcion_menu == "GESTION TALLER LED":
     st.markdown("##### Control de Componentes Damnificados")
     partidas_lista = ["ROMBO", "PIKA", "UNI 500", "UNI 1000", "BLACKFACE", "NUEVA NUEVA"]
     
