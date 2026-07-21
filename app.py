@@ -13,7 +13,7 @@ st.set_page_config(
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- ESTILOS CSS CON CORRECCIÓN TOTAL DE ICONOS RO T O S Y CONTRASTE ---
+# --- ESTILOS CSS CON ELIMINACIÓN DEFINTIVA DE TEXTO ROTO ---
 st.markdown("""
 <style>
     /* IMPORTAR FUENTES E ICONOS OFICIALES DE GOOGLE */
@@ -29,23 +29,20 @@ st.markdown("""
         color: #e9edef !important;
     }
 
-    /* SOLUCIÓN AL TEXTO ROTO DEL BOTÓN DEL MENÚ (DOUBLE_ARROW / KEYBOARD_DOUBLE) */
-    button[data-testid="stHeaderActionElements"], 
-    button[data-testid="baseButton-headerNoPadding"],
-    [data-testid="stSidebarCollapseButton"] button {
-        color: #00a884 !important;
-        font-size: 1.2rem !important;
+    /* OCULTAR TEXTO ROTO EN TODOS LOS BOTONES DEL HEADER Y MENÚ */
+    header button *, 
+    [data-testid="stSidebarCollapseButton"] button *,
+    [data-testid="stHeaderActionElements"] * {
+        font-size: 0 !important; /* Esconde todo texto en inglés */
     }
     
-    /* Reemplazar texto roto por flechas gráficas */
-    [data-testid="stSidebarCollapseButton"] span {
-        font-size: 0 !important; /* Oculta el texto en inglés */
-    }
+    header button::after, 
     [data-testid="stSidebarCollapseButton"] button::after {
-        content: "»" !important;
+        content: "»" !important; /* Dibuja una flecha gráfica limpia */
         font-size: 1.8rem !important;
         font-weight: 900 !important;
         color: #00a884 !important;
+        display: inline-block !important;
     }
 
     /* Textos Generales */
