@@ -13,11 +13,13 @@ st.set_page_config(
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- ESTILOS CSS CON TIPOGRAFÍA POPPINS Y FONDO PATRÓN WHATSAPP ---
+# --- ESTILOS CSS CON CORRECCIÓN DE CONTRASTE Y FUENTES ---
 st.markdown("""
 <style>
-    /* IMPORTAR FUENTE GOOGLE FONTS (POPPINS) */
+    /* IMPORTAR FUENTES E ICONOS OFICIALES DE GOOGLE */
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+    @import url('https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined');
 
     /* APLICAR FUENTE Y FONDO TIPO WHATSAPP DOODLE */
     html, body, .stApp {
@@ -27,10 +29,30 @@ st.markdown("""
         color: #e9edef !important;
     }
     
+    /* Permite renderizar correctamente los iconos nativos de Streamlit */
+    .material-symbols-outlined, .material-icons {
+        font-family: 'Material Symbols Outlined', 'Material Icons' !important;
+    }
+
     /* Textos Generales */
     p, span, label, h1, h2, h3, h4, h5, h6, .stMarkdown {
         font-family: 'Poppins', sans-serif !important;
         color: #e9edef !important;
+    }
+
+    /* CORRECCIÓN DE ILEGIBILIDAD EN PC: CAMPOS DE TEXTO Y TEXTAREAS */
+    textarea, input, div[data-baseweb="base-input"] {
+        background-color: #111b21 !important;
+        color: #ffffff !important;
+        border: 1px solid #2a3942 !important;
+        font-family: 'Courier New', monospace !important;
+        font-weight: 600 !important;
+    }
+    
+    div[data-baseweb="select"] > div {
+        background-color: #111b21 !important;
+        color: #ffffff !important;
+        border: 1px solid #2a3942 !important;
     }
 
     /* BARRA LATERAL (SIDEBAR) */
