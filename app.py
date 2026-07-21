@@ -13,7 +13,7 @@ st.set_page_config(
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- ESTILOS CSS CON CORRECCIÓN DE CONTRASTE Y FUENTES ---
+# --- ESTILOS CSS CON CORRECCIÓN TOTAL DE ICONOS RO T O S Y CONTRASTE ---
 st.markdown("""
 <style>
     /* IMPORTAR FUENTES E ICONOS OFICIALES DE GOOGLE */
@@ -28,10 +28,24 @@ st.markdown("""
         background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%231f2c34' fill-opacity='0.45' fill-rule='evenodd'%3E%3Cpath d='M11 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zM0 11l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zM11 22l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zM0 33l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3z'/%3E%3C/g%3E%3C/svg%3E") !important;
         color: #e9edef !important;
     }
+
+    /* SOLUCIÓN AL TEXTO ROTO DEL BOTÓN DEL MENÚ (DOUBLE_ARROW / KEYBOARD_DOUBLE) */
+    button[data-testid="stHeaderActionElements"], 
+    button[data-testid="baseButton-headerNoPadding"],
+    [data-testid="stSidebarCollapseButton"] button {
+        color: #00a884 !important;
+        font-size: 1.2rem !important;
+    }
     
-    /* Permite renderizar correctamente los iconos nativos de Streamlit */
-    .material-symbols-outlined, .material-icons {
-        font-family: 'Material Symbols Outlined', 'Material Icons' !important;
+    /* Reemplazar texto roto por flechas gráficas */
+    [data-testid="stSidebarCollapseButton"] span {
+        font-size: 0 !important; /* Oculta el texto en inglés */
+    }
+    [data-testid="stSidebarCollapseButton"] button::after {
+        content: "»" !important;
+        font-size: 1.8rem !important;
+        font-weight: 900 !important;
+        color: #00a884 !important;
     }
 
     /* Textos Generales */
