@@ -13,135 +13,151 @@ st.set_page_config(
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- ESTILOS CSS PERSONALIZADOS ---
+# --- ESTILOS CSS CON TIPOGRAFÍA POPPINS Y FONDO PATRÓN WHATSAPP ---
 st.markdown("""
 <style>
-    /* Fondo General Verde #006414 */
-    .stApp {
-        background-color: #006414 !important;
-        color: #ffffff !important;
-        font-family: 'Segoe UI', -apple-system, Roboto, sans-serif;
+    /* IMPORTAR FUENTE GOOGLE FONTS (POPPINS) */
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap');
+
+    /* APLICAR FUENTE Y FONDO TIPO WHATSAPP DOODLE */
+    html, body, .stApp {
+        font-family: 'Poppins', sans-serif !important;
+        background-color: #0b141a !important;
+        background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%231f2c34' fill-opacity='0.45' fill-rule='evenodd'%3E%3Cpath d='M11 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zM0 11l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zM11 22l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zM0 33l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3zm22 0l3 3-3 3-3-3 3-3z'/%3E%3C/g%3E%3C/svg%3E") !important;
+        color: #e9edef !important;
     }
     
-    /* Animación de entrada menú lateral */
-    @keyframes slideInLeft {
-        from {
-            transform: translateX(-100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+    /* Textos Generales */
+    p, span, label, h1, h2, h3, h4, h5, h6, .stMarkdown {
+        font-family: 'Poppins', sans-serif !important;
+        color: #e9edef !important;
     }
 
-    /* Fondo de la Barra Lateral desplegable */
+    /* BARRA LATERAL (SIDEBAR) */
     section[data-testid="stSidebar"] {
-        background-color: #004d0f !important;
-        border-right: 2px solid #00330a !important;
-        animation: slideInLeft 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        background-color: #111b21 !important;
+        border-right: 2px solid #222e35 !important;
     }
 
-    /* Estilo del menú radio en la barra lateral (Más grande y separado) */
-    div[data-testid="stSidebar"] label {
-        color: #ffffff !important;
+    /* ESTILO DE OPCIONES DEL MENÚ (RADIO BUTTONS GRANDES Y SEPARADOS) */
+    div[data-testid="stSidebar"] div[role="radiogroup"] {
+        gap: 12px !important;
     }
     
-    /* Agrandar y separar las opciones del menú desplegable */
-    div[data-testid="stSidebar"] div[role="radiogroup"] > label {
-        padding: 12px 10px !important;
-        margin-bottom: 8px !important;
-        border-radius: 8px !important;
-        background-color: rgba(255, 255, 255, 0.08) !important;
+    div[data-testid="stSidebar"] div[role="radiogroup"] label {
+        background-color: #202c33 !important;
+        border: 1px solid #2a3942 !important;
+        border-radius: 10px !important;
+        padding: 14px 16px !important;
+        margin: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-in-out !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+    }
+
+    div[data-testid="stSidebar"] div[role="radiogroup"] label p {
         font-size: 1.15rem !important;
         font-weight: 800 !important;
+        color: #e9edef !important;
         letter-spacing: 0.5px !important;
     }
 
-    /* Header Principal */
+    /* OPCION SELECCIONADA EN EL MENÚ (VERDE NEÓN HIGHLIGHT) */
+    div[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) {
+        background-color: #00a884 !important;
+        border-color: #00a884 !important;
+        box-shadow: 0 4px 12px rgba(0, 168, 132, 0.4) !important;
+    }
+
+    div[data-testid="stSidebar"] div[role="radiogroup"] label:has(input:checked) p {
+        color: #ffffff !important;
+    }
+
+    /* HEADER PRINCIPAL */
     .header-box {
-        background: #00420d;
-        border-bottom: 3px solid #00ff33;
-        border-radius: 10px;
-        padding: 18px;
+        background: #111b21;
+        border-bottom: 4px solid #00a884;
+        border-radius: 12px;
+        padding: 20px;
         text-align: center;
         margin-bottom: 25px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
     .header-title {
-        font-family: 'Arial Black', sans-serif;
-        color: #ffffff;
-        font-size: 1.8rem;
+        font-weight: 900 !important;
+        color: #ffffff !important;
+        font-size: 1.9rem;
         letter-spacing: 2px;
         margin: 0;
         text-transform: uppercase;
     }
 
-    /* Tarjetas KPI de Métricas */
+    /* CONTENEDORES Y TARJETAS CON ALTO CONTRASTE */
+    div[data-testid="stVerticalBlock"] > div {
+        background-color: #111b21 !important;
+        border: 1px solid #222e35 !important;
+        border-radius: 12px !important;
+        padding: 16px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+    }
+
+    /* TARJETAS KPI DE MÉTRICAS */
     .kpi-card {
-        background: #00420d;
-        border-left: 4px solid #00ff33;
-        border-radius: 6px;
-        padding: 12px;
+        background: #202c33;
+        border-left: 4px solid #00a884;
+        border-radius: 8px;
+        padding: 12px 16px;
         margin-bottom: 10px;
     }
     .kpi-label {
-        font-size: 0.75rem;
-        color: #b3ffc2;
+        font-size: 0.8rem;
+        color: #8696a0;
         text-transform: uppercase;
         font-weight: 700;
         letter-spacing: 1px;
     }
     .kpi-value {
-        font-size: 1.25rem;
+        font-size: 1.3rem;
         color: #ffffff;
         font-weight: 800;
         font-family: 'Courier New', monospace;
     }
 
-    /* Alertas de Stock */
+    /* ALERTAS DE STOCK */
     .alert-ok {
-        background-color: rgba(0, 255, 51, 0.15);
-        border: 2px solid #00ff33;
-        border-radius: 8px;
-        color: #ffffff;
-        padding: 15px;
+        background-color: rgba(0, 168, 132, 0.2);
+        border: 2px solid #00a884;
+        border-radius: 10px;
+        color: #25d366;
+        padding: 16px;
         text-align: center;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 800;
     }
     .alert-error {
-        background-color: rgba(255, 0, 0, 0.2);
-        border: 2px solid #ff4d4d;
-        border-radius: 8px;
-        color: #ffffff;
-        padding: 15px;
+        background-color: rgba(234, 67, 53, 0.2);
+        border: 2px solid #f15c6d;
+        border-radius: 10px;
+        color: #f15c6d;
+        padding: 16px;
         text-align: center;
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 800;
     }
 
-    /* Bloques Taller */
+    /* BLOQUES TALLER */
     .taller-card {
-        background: #00420d;
-        border: 1px solid #00801a;
+        background: #202c33;
+        border: 1px solid #2a3942;
         border-radius: 8px;
         padding: 12px;
         margin-bottom: 15px;
     }
     .taller-title {
-        color: #66ff85;
+        color: #00a884;
         font-weight: 800;
-        font-size: 1.1rem;
-        margin-bottom: 10px;
-    }
-    
-    /* Contenedores de inputs */
-    div[data-testid="stVerticalBlock"] > div {
-        background-color: #004d0f;
-        border: 1px solid #00801a;
-        border-radius: 8px;
-        padding: 12px;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -309,7 +325,7 @@ with st.sidebar:
         label_visibility="collapsed"
     )
     st.markdown("---")
-    st.caption("SISTEMA CONTROL DE VIDEO v3.0")
+    st.caption("SISTEMA CONTROL DE VIDEO v3.5")
 
 # --- ENCABEZADO PRINCIPAL ---
 st.markdown("""
@@ -358,7 +374,7 @@ if opcion_menu == "CALCULADORA DE PANTALLA":
             st.markdown(f"""
             <div class="alert-ok">
                 ✅ DISPONIBLE<br>
-                <span style="font-size: 0.9rem; font-weight: 500;">Quedan libres: {gabs_libres_restantes} gabs ({m2_libres_restantes:.2f} m²)</span>
+                <span style="font-size: 0.9rem; font-weight: 500; color: #ffffff;">Quedan libres: {gabs_libres_restantes} gabs ({m2_libres_restantes:.2f} m²)</span>
             </div>
             """, unsafe_allow_html=True)
         else:
@@ -367,7 +383,7 @@ if opcion_menu == "CALCULADORA DE PANTALLA":
             st.markdown(f"""
             <div class="alert-error">
                 🚨 ERROR: FALTA STOCK<br>
-                <span style="font-size: 0.9rem; font-weight: 500;">Faltan: {gabs_faltantes} gabs ({m2_faltantes:.2f} m²)</span>
+                <span style="font-size: 0.9rem; font-weight: 500; color: #ffffff;">Faltan: {gabs_faltantes} gabs ({m2_faltantes:.2f} m²)</span>
             </div>
             """, unsafe_allow_html=True)
 
