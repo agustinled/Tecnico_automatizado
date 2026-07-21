@@ -3,15 +3,123 @@ import math
 import sqlite3
 from datetime import datetime
 
-# --- CONFIGURACIÓN DE LA PÁGINA PARA CELULAR ---
+# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
     page_title="TÉCNICO AUTOMÁTICO DE VIDEO",
     page_icon="📺",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 DB_NAME = "inventario_led_fijo.db"
+
+# --- ESTILOS CSS PERSONALIZADOS + ANIMACIÓN SLIDE-IN EN BARRA LATERAL ---
+st.markdown("""
+<style>
+    /* Fondo General */
+    .stApp {
+        background-color: #0b0e14;
+        color: #e2e8f0;
+        font-family: 'Segoe UI', -apple-system, Roboto, sans-serif;
+    }
+    
+    /* ANIMACIÓN DE TRANSICIÓN DE IZQUIERDA A DERECHA EN BARRA LATERAL */
+    @keyframes slideInLeft {
+        from {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    section[data-testid="stSidebar"] {
+        background-color: #111622 !important;
+        border-right: 1px solid #1e2638 !important;
+        animation: slideInLeft 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    /* Header Principal */
+    .header-box {
+        background: linear-gradient(135deg, #141a29 0%, #0d111a 100%);
+        border-bottom: 3px solid #2563eb;
+        border-radius: 10px;
+        padding: 18px;
+        text-align: center;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .header-title {
+        font-family: 'Arial Black', sans-serif;
+        color: #ffffff;
+        font-size: 1.8rem;
+        letter-spacing: 2px;
+        margin: 0;
+        text-transform: uppercase;
+    }
+
+    /* Tarjetas KPI de Métricas */
+    .kpi-card {
+        background: #161c2e;
+        border-left: 4px solid #2563eb;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+    .kpi-label {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+    .kpi-value {
+        font-size: 1.25rem;
+        color: #f8fafc;
+        font-weight: 800;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Alertas de Stock */
+    .alert-ok {
+        background-color: rgba(16, 185, 129, 0.1);
+        border: 2px solid #10b981;
+        border-radius: 8px;
+        color: #34d399;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+    .alert-error {
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 2px solid #ef4444;
+        border-radius: 8px;
+        color: #f87171;
+        padding: 15px;
+        text-align: center;
+        font-size: 1.1rem;
+        font-weight: 800;
+    }
+
+    /* Bloques Taller */
+    .taller-card {
+        background: #141a28;
+        border: 1px solid #232d42;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+    .taller-title {
+        color: #38bdf8;
+        font-weight: 800;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- BASE DE DATOS LOCAL ---
 def inicializar_bd():
@@ -104,8 +212,7 @@ def calcular_mapa_senal(gabs_ancho, gabs_alto, px_por_gab, total_gabs):
     cables_necesarios = math.ceil(px_totales / limite_puerto)
     gabs_por_cable = math.floor(total_gabs / cables_necesarios) if cables_necesarios > 0 else total_gabs
     
-    txt_cableado = f"[DIAGRAMA DE SEÑAL NOVASTAR]\n"
-    txt_cableado += f"➔ CAPACIDAD REQUERIDA: {px_totales:,} px totales\n"
+    txt_cableado = f"➔ CAPACIDAD REQUERIDA: {px_totales:,} px totales\n"
     txt_cableado += f"➔ CABLES MAIN NECESARIOS: {cables_necesarios} lineas Cat6 independientes\n"
     
     restante = total_gabs
@@ -166,27 +273,42 @@ def ver_salones():
         txt += f"• [{row[4]}] SECTOR: {row[0]} ➔ {row[1]}: {row[2]} gabs ({row[3]:.2f} m²)\n"
     return txt
 
-# --- ENCABEZADO ---
-st.markdown("<h1 style='text-align: center; color: white;'>TÉCNICO AUTOMÁTICO DE VIDEO</h1>", unsafe_allow_html=True)
+# --- BARRA LATERAL DESPLEGABLE CON ANIMACIÓN (SIDEBAR) ---
+with st.sidebar:
+    st.markdown("### 🛠️ CONSOLA DE NAVEGACIÓN")
+    st.markdown("---")
+    opcion_menu = st.radio(
+        "Seleccionar Módulo:",
+        ["🧮 Calculador y Asignaciones", "📦 Stock en Tiempo Real", "🛠️ Gestión de Taller"],
+        index=0
+    )
+    st.markdown("---")
+    st.caption("SISTEMA CONTROL DE VIDEO v2.5")
+    st.caption("Depósito LED & Taller")
 
-tab1, tab2, tab3 = st.tabs(["🧮 CALCULADOR", "📦 STOCK EN TIEMPO REAL", "🛠️ TALLER"])
+# --- ENCABEZADO PRINCIPAL ---
+st.markdown("""
+<div class="header-box">
+    <h1 class="header-title">TÉCNICO AUTOMÁTICO DE VIDEO</h1>
+</div>
+""", unsafe_allow_html=True)
 
-# --- TAB 1: CALCULADOR ---
-with tab1:
-    st.subheader("Parámetros de la Solicitud")
-    col1, col2 = st.columns(2)
+# --- VISTA 1: CALCULADOR ---
+if opcion_menu == "🧮 Calculador y Asignaciones":
+    col1, col2 = st.columns([1, 1])
+    
     with col1:
+        st.markdown("##### Configuración de Pantalla")
         txt_salon = st.selectbox("Ubicación / Salón de Destino", ["SUR", "SUR LUXURY", "CENTRAL", "NORTE", "NORTE LUXURY", "GRAN SALÓN"])
         tipo = st.selectbox("Modelo de Partida LED", ["ROMBO", "PIKA", "UNI 500", "UNI 1000", "BLACKFACE", "NUEVA NUEVA"], index=1)
-    with col2:
-        modo = st.radio("Unidad de Medida de Entrada", ["Metros (m)", "Píxeles (px)"])
-        ancho = st.number_input("Dimensión Ancho", value=4.0, step=0.5)
-        alto = st.number_input("Dimensión Alto", value=3.0, step=0.5)
-    
-    col_btn1, col_btn2 = st.columns(2)
-    comprobar = col_btn1.button("🔍 Comprobar Stock", use_container_width=True)
-    confirmar = col_btn2.button("🚀 Confirmar y Registrar", type="primary", use_container_width=True)
-    
+        modo = st.radio("Unidad de Medida de Entrada", ["Metros (m)", "Píxeles (px)"], horizontal=True)
+        
+        c_ancho, c_alto = st.columns(2)
+        ancho = c_ancho.number_input("Ancho", value=4.0, step=0.5)
+        alto = c_alto.number_input("Alto", value=3.0, step=0.5)
+        
+        confirmar = st.button("🚀 Confirmar y Registrar Salón", type="primary", use_container_width=True)
+
     mod = obtener_datos_partida(tipo)
     if modo == "Metros (m)":
         gabs_ancho = math.ceil(ancho / mod["ancho_m"])
@@ -202,26 +324,60 @@ with tab1:
     res_ancho = gabs_ancho * mod["px_ancho"]
     res_alto = gabs_alto * mod["px_alto"]
     px_por_gab = mod["px_ancho"] * mod["px_alto"]
-    
+
+    with col2:
+        st.markdown("##### Estado de Disponibilidad")
+        if total_gabs_necesarios <= mod["disponibles_gabs"]:
+            gabs_libres_restantes = mod["disponibles_gabs"] - total_gabs_necesarios
+            m2_libres_restantes = gabs_libres_restantes * mod["m2_por_gab"]
+            st.markdown(f"""
+            <div class="alert-ok">
+                ✅ DISPONIBLE<br>
+                <span style="font-size: 0.9rem; font-weight: 500;">Quedan libres: {gabs_libres_restantes} gabs ({m2_libres_restantes:.2f} m²)</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            gabs_faltantes = total_gabs_necesarios - mod["disponibles_gabs"]
+            m2_faltantes = gabs_faltantes * mod["m2_por_gab"]
+            st.markdown(f"""
+            <div class="alert-error">
+                🚨 ERROR: FALTA STOCK<br>
+                <span style="font-size: 0.9rem; font-weight: 500;">Faltan: {gabs_faltantes} gabs ({m2_faltantes:.2f} m²)</span>
+            </div>
+            """, unsafe_allow_html=True)
+
+        kpi1, kpi2 = st.columns(2)
+        with kpi1:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">Medida Real</div>
+                <div class="kpi-value">{ancho_real:.2f}m x {alto_real:.2f}m</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">Estructura</div>
+                <div class="kpi-value">{gabs_ancho} x {gabs_alto} gabs</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with kpi2:
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">Superficie</div>
+                <div class="kpi-value">{m2_reales:.2f} m²</div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown(f"""
+            <div class="kpi-card">
+                <div class="kpi-label">Resolución</div>
+                <div class="kpi-value">{res_ancho}x{res_alto} px</div>
+            </div>
+            """, unsafe_allow_html=True)
+
     st.markdown("---")
-    if total_gabs_necesarios <= mod["disponibles_gabs"]:
-        gabs_libres_restantes = mod["disponibles_gabs"] - total_gabs_necesarios
-        m2_libres_restantes = gabs_libres_restantes * mod["m2_por_gab"]
-        st.success(f"✅ DISPONIBLE\nQuedan libres en depósito: {gabs_libres_restantes} gabs ({m2_libres_restantes:.2f} m²)")
-    else:
-        gabs_faltantes = total_gabs_necesarios - mod["disponibles_gabs"]
-        m2_faltantes = gabs_faltantes * mod["m2_por_gab"]
-        st.error(f"🚨 ERROR: FALTA STOCK\nFaltan fabricar para este armado: {gabs_faltantes} gabs ({m2_faltantes:.2f} m²)")
-
-    reporte = f"➔ ESTRUCTURA ARMADA: {gabs_ancho} x {gabs_alto} módulos\n"
-    reporte += f"➔ MEDIDA REAL DE ARMADO: {ancho_real}m ancho x {alto_real}m alto ({m2_reales:.2f} m²)\n"
-    reporte += f"➔ HARDWARE REQUERIDO: {total_gabs_necesarios} gabinetes\n"
-    reporte += f"➔ RESOLUCIÓN CALCULADA: {res_ancho} x {res_alto} px\n"
-    reporte += f"--------------------------------------------------\n"
-    reporte += f"➔ DISPONIBLE NETO EN DEPÓSITO ANTES DEL SHOW: {mod['disponibles_gabs']} gabs ({mod['disponibles_gabs'] * mod['m2_por_gab']:.2f} m²)"
-
-    st.text_area("Dimensiones de Estructura Calculada", reporte, height=180)
-    st.text_area("Distribución de Cables de Datos Main", calcular_mapa_senal(gabs_ancho, gabs_alto, px_por_gab, total_gabs_necesarios), height=250)
+    st.markdown("##### Diagrama de Datos y Señal NovaStar")
+    st.text_area("Ruteado de Señal", calcular_mapa_senal(gabs_ancho, gabs_alto, px_por_gab, total_gabs_necesarios), height=200)
 
     if confirmar:
         if total_gabs_necesarios <= mod["disponibles_gabs"]:
@@ -232,67 +388,78 @@ with tab1:
                            (txt_salon, tipo, total_gabs_necesarios, m2_reales, fecha_hoy))
             conn.commit()
             conn.close()
-            st.toast(f"🎉 Registrado en {txt_salon}!")
+            st.toast(f"🚀 Registrado en {txt_salon}!")
             st.rerun()
         else:
-            st.error("Sin stock suficiente.")
+            st.error("No se puede registrar: Stock insuficiente.")
 
-# --- TAB 2: STOCK ---
-with tab2:
-    st.subheader("Monitoreo de Depósito")
-    st.text_area("Módulos Libres / Uso / Taller", ver_reporte_deposito(), height=300)
-    st.subheader("Registro Semanal de Eventos")
-    st.text_area("Hojas de Ruta Operativas", ver_salones(), height=200)
+# --- VISTA 2: STOCK ---
+elif opcion_menu == "📦 Stock en Tiempo Real":
+    col_stock1, col_stock2 = st.columns(2)
+    with col_stock1:
+        st.markdown("##### Monitoreo de Depósito")
+        st.text_area("Módulos Libres / Uso / Taller", ver_reporte_deposito(), height=350)
     
-    if st.button("🗑️ Reiniciar Ciclo Semanal (Resetear Salones)", type="secondary"):
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM salones")
-        conn.commit()
-        conn.close()
-        st.toast("Semana reseteada!")
-        st.rerun()
+    with col_stock2:
+        st.markdown("##### Hojas de Ruta en Salones")
+        st.text_area("Eventos Activos", ver_salones(), height=250)
+        
+        if st.button("🗑️ Reiniciar Ciclo Semanal", type="secondary", use_container_width=True):
+            conn = sqlite3.connect(DB_NAME)
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM salones")
+            conn.commit()
+            conn.close()
+            st.toast("Base de datos reseteada para la nueva semana!")
+            st.rerun()
 
-# --- TAB 3: TALLER ---
-with tab3:
-    st.subheader("Registro General de Componentes Damnificados")
+# --- VISTA 3: TALLER ---
+elif opcion_menu == "🛠️ Gestión de Taller":
+    st.markdown("##### Control de Componentes Damnificados")
     partidas_lista = ["ROMBO", "PIKA", "UNI 500", "UNI 1000", "BLACKFACE", "NUEVA NUEVA"]
     
     for p_name in partidas_lista:
         p_init = obtener_datos_partida(p_name)
-        st.write(f"### {p_init['nombre']}")
+        
+        st.markdown(f"""
+        <div class="taller-card">
+            <div class="taller-title">{p_init['nombre']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
         c1, c2, c3 = st.columns(3)
         
         with c1:
             st.caption("Módulos Taller")
-            st.write(f"**{p_init['rotos_gabs']}**")
+            st.markdown(f"**{p_init['rotos_gabs']} gabs**")
             b1, b2 = st.columns(2)
-            if b1.button("-", key=f"{p_name}_g_sub"):
+            if b1.button("-", key=f"{p_name}_g_sub", use_container_width=True):
                 cambiar_contador(p_name, "gabs_rotos", -1)
                 st.rerun()
-            if b2.button("+", key=f"{p_name}_g_add"):
+            if b2.button("+", key=f"{p_name}_g_add", use_container_width=True):
                 cambiar_contador(p_name, "gabs_rotos", 1)
                 st.rerun()
 
         with c2:
             st.caption("Ladrillos Reparación")
-            st.write(f"**{p_init['ladrillos_en_reparacion']}**")
+            st.markdown(f"**{p_init['ladrillos_en_reparacion']} uds**")
             b3, b4 = st.columns(2)
-            if b3.button("-", key=f"{p_name}_lrep_sub"):
+            if b3.button("-", key=f"{p_name}_lrep_sub", use_container_width=True):
                 cambiar_contador(p_name, "ladrillos_en_reparacion", -1)
                 st.rerun()
-            if b4.button("+", key=f"{p_name}_lrep_add"):
+            if b4.button("+", key=f"{p_name}_lrep_add", use_container_width=True):
                 cambiar_contador(p_name, "ladrillos_en_reparacion", 1)
                 st.rerun()
 
         with c3:
             st.caption("Ladrillos Esperando")
-            st.write(f"**{p_init['ladrillos_esperando']}**")
+            st.markdown(f"**{p_init['ladrillos_esperando']} uds**")
             b5, b6 = st.columns(2)
-            if b5.button("-", key=f"{p_name}_lesp_sub"):
+            if b5.button("-", key=f"{p_name}_lesp_sub", use_container_width=True):
                 cambiar_contador(p_name, "ladrillos_esperando", -1)
                 st.rerun()
-            if b6.button("+", key=f"{p_name}_lesp_add"):
+            if b6.button("+", key=f"{p_name}_lesp_add", use_container_width=True):
                 cambiar_contador(p_name, "ladrillos_esperando", 1)
                 st.rerun()
-        st.markdown("---")
+                
+        st.markdown("<br>", unsafe_allow_html=True)
