@@ -1,43 +1,4 @@
-import math
-import sqlite3
-import re
-import os
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from whatsapp_chatbot_python import GreenAPIBot, Notification
-
-# --- SERVIDOR WEB EN SEGUNDO PLANO PARA RENDER (100% GRATIS) ---
-class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.end_headers()
-        self.wfile.write(b"Bot de WhatsApp activo y funcionando 24/7")
-
-def run_web_server():
-    port = int(os.environ.get("PORT", 8080))
-    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
-    server.serve_forever()
-
-# Iniciar servidor web en un hilo secundario
-threading.Thread(target=run_web_server, daemon=True).start()
-
-# --- CONEXIÓN A LA BASE DE DATOS COMPARTIDA ---
-DB_NAME = "inventario_led_fijo.db"
-
-def obtener_datos_partida(partida):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT nombre_largo, ancho_mm, alto_mm, px_ancho, px_alto, 
-               gabs_comprados_total, gabs_rotos, ladrillos_en_reparacion, ladrillos_esperando 
-        FROM inventario WHERE partida=?
-    """, (partida,))
-    res = cursor.fetchone()
-    if not res:
-        conn.close()
-        return None
-        
-    cursor.execute("SELECT SUM(gabs_usados) FROM salones WHERE partida=?", (partida,))
+   cursor.execute("SELECT SUM(gabs_usados) FROM salones WHERE partida=?", (partida,))
     gabs_en_uso = cursor.fetchone()[0] or 0
     conn.close()
     
