@@ -2,6 +2,7 @@ import math
 import sqlite3
 import re
 import os
+import time
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from whatsapp_chatbot_python import GreenAPIBot, Notification
@@ -134,7 +135,8 @@ def procesar_mensaje(notification: Notification) -> None:
         notification.answer(ver_reporte_taller())
         return
 
-    match = re.match(r"^!(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\s+(.+)$", texto)
+    # Acepta espacio opcional: !4x3 pika o !4x3pika
+    match = re.match(r"^!(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\s*(.+)$", texto)
     if match:
         ancho = float(match.group(1))
         alto = float(match.group(2))
@@ -186,13 +188,11 @@ def procesar_mensaje(notification: Notification) -> None:
     ayuda += "• `!4x3 pika` : Calcular pantalla (ancho x alto modelo)\n"
     notification.answer(ayuda)
 
-# --- INICIO DEL BOT CON REINTENTO AUTOMÁTICO ---
-import time
-
+# --- 5. BUCLE DE EJECUCIÓN CON CAPTURA DE ERRORES Y REINTENTO ---
 while True:
     try:
-        print("🤖 Iniciando polling del Bot de WhatsApp...")
+        print("🤖 Iniciando escuchador del Bot de WhatsApp...")
         bot.run_for_ever()
     except Exception as e:
         print(f"⚠️ Error en la conexión del bot: {e}. Reintentando en 10 segundos...")
-        time.sleep(10)#
+        time.sleep(10)
