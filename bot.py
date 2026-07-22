@@ -186,4 +186,13 @@ def procesar_mensaje(notification: Notification) -> None:
     ayuda += "• `!4x3 pika` : Calcular pantalla (ancho x alto modelo)\n"
     notification.answer(ayuda)
 
-bot.run_for_ever()
+# --- INICIO DEL BOT CON REINTENTO AUTOMÁTICO ---
+import time
+
+while True:
+    try:
+        print("🤖 Iniciando polling del Bot de WhatsApp...")
+        bot.run_for_ever()
+    except Exception as e:
+        print(f"⚠️ Error en la conexión del bot: {e}. Reintentando en 10 segundos...")
+        time.sleep(10)#
