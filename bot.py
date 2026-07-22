@@ -73,13 +73,12 @@ def ver_reporte_taller():
             reporte += f"----------------------------------\n"
     return reporte
 
-# --- INICIALIZACIÓN DEL BOT ---
-# Usamos credenciales de instancia (se configuran gratis)
+# --- INICIALIZACIÓN DEL BOT CON TUS CREDENCIALES ---
 bot = GreenAPIBot(
-    "ID_INSTANCIA_AQUI", "TOKEN_AQUI"
+    "710722690480", "096fbb2829b946db96ca3fb1b2edba66b5c7632d6d904ce79c"
 )
 
-# --- MANEJADOR DE MENSAJES DEL GRUPO ---
+# --- MANEJADOR DE MENSAJES ---
 @bot.router.message()
 def procesar_mensaje(notification: Notification) -> None:
     texto = notification.message_text.strip().lower()
@@ -98,19 +97,17 @@ def procesar_mensaje(notification: Notification) -> None:
         notification.answer(ver_reporte_taller())
         return
 
-    # COMANDO: !pantalla o !4x3 pika (Ejemplo: !4x3 pika)
-    # Patrón para detectar medidas tipo "!4x3 pika" o "!5x2.5 rombo"
+    # COMANDO: !4x3 pika (Ejemplo: !4x3 pika)
     match = re.match(r"^!(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\s+(.+)$", texto)
     if match:
         ancho = float(match.group(1))
         alto = float(match.group(2))
         modelo_buscado = match.group(3).strip().upper()
         
-        # Mapear nombre rápido a partida de la BD
         mapa_modelos = {
             "PIKA": "PIKA", "ROMBO": "ROMBO", "UNI500": "UNI 500",
             "UNI 500": "UNI 500", "UNI1000": "UNI 1000", "UNI 1000": "UNI 1000",
-            "BLACKFACE": "BLACKFACE", "NUEVA": "NUEVA NUEVA"
+            "BLACKFACE": "BLACKFACE", "NUEVA": "NUEVA NUEVA", "NUEVA NUEVA": "NUEVA NUEVA"
         }
         
         partida = mapa_modelos.get(modelo_buscado, modelo_buscado)
@@ -125,7 +122,6 @@ def procesar_mensaje(notification: Notification) -> None:
         total_necesarios = gabs_ancho * gabs_alto
         m2_reales = total_necesarios * mod["m2_por_gab"]
         
-        # Cálculo de líneas Cat6
         px_totales = total_necesarios * (mod["px_ancho"] * mod["px_alto"])
         cables_main = math.ceil(px_totales / 650000)
         
@@ -148,7 +144,7 @@ def procesar_mensaje(notification: Notification) -> None:
         notification.answer(resp)
         return
 
-    # MENSAJE DE AYUDA SI EL COMANDO NO SE RECONOCE
+    # MENSAJE DE AYUDA SI EL COMANDO NO ES VÁLIDO
     ayuda = "🤖 *COMANDOS DEL BOT TÉCNICO*\n"
     ayuda += "• `!stock` : Ver módulos libres y en uso\n"
     ayuda += "• `!taller` : Ver componentes rotos\n"
