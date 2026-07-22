@@ -14,10 +14,63 @@ GREEN_API_URL = f"https://api.green-api.com/waInstance{ID_INSTANCE}"
 
 DB_NAME = "inventario_led_fijo.db"
 
+# --- CREACIÓN AUTOMÁTICA DE BASE DE DATOS SI NO EXISTE ---
+def inicializar_bd():
+    if not os.path.exists(DB_NAME):
+        print("⚠️ Base de datos no encontrada. Creándola de forma automática...")
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS inventario (
+                partida TEXT PRIMARY KEY,
+                nombre_largo TEXT,
+                ancho_mm REAL,
+                alto_mm REAL,
+                px_ancho INTEGER,
+                px_alto INTEGER,
+                gabs_comprados_total INTEGER,
+                gabs_rotos INTEGER DEFAULT 0,
+                ladrillos_en_reparacion INTEGER DEFAULT 0,
+                ladrillos_esperando INTEGER DEFAULT 0
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS salones (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                partida TEXT,
+                salon TEXT,
+                gabs_usados INTEGER
+            )
+        """)
+        
+        # Cargar pantallas por defecto
+        pantallas_defecto = [
+            ('PIKA', 'P4.8 Outdoor (Pika)', 500, 1000, 104, 208, 100, 0, 0, 0),
+            ('ROMBO', 'P3.9 Indoor (Rombo)', 500, 500, 128, 128, 80, 0, 0, 0),
+            ('UNI 500', 'P2.9 Indoor (Uni 500)', 500, 500, 168, 168, 60, 0, 0, 0),
+            ('UNI 1000', 'P2.9 Indoor (Uni 1000)', 500, 1000, 168, 336, 40, 0, 0, 0),
+            ('BLACKFACE', 'P3.9 Outdoor BlackFace', 500, 1000, 128, 256, 50, 0, 0, 0),
+            ('NUEVA NUEVA', 'P2.6 High Refresh', 500, 500, 192, 192, 50, 0, 0, 0)
+        ]
+        
+        cursor.executemany("""
+            INSERT OR IGNORE INTO inventario 
+            (partida, nombre_largo, ancho_mm, alto_mm, px_ancho, px_alto, gabs_comprados_total, gabs_rotos, ladrillos_en_reparacion, ladrillos_esperando)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, pantallas_defecto)
+        
+        conn.commit()
+        conn.close()
+        print("✅ Base de datos inicializada correctamente con los datos de las pantallas.")
+
+# Ejecutar inicializador al arrancar el servidor
+inicializar_bd()
+
 # --- FUNCIONES DE BASE DE DATOS ---
 def obtener_datos_partida(partida):
-    if not os.path.exists(DB_NAME):
-        return None
+    inicializar_bd()
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
@@ -54,8 +107,7 @@ def obtener_datos_partida(partida):
         return None
 
 def ver_reporte_stock():
-    if not os.path.exists(DB_NAME):
-        return "⚠️ Base de datos no encontrada en el servidor."
+    inicializar_bd()
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
@@ -77,8 +129,7 @@ def ver_reporte_stock():
         return f"Error leyendo stock: {e}"
 
 def ver_reporte_taller():
-    if not os.path.exists(DB_NAME):
-        return "⚠️ Base de datos no encontrada en el servidor."
+    inicializar_bd()
     try:
         conn = sqlite3.connect(DB_NAME)
         cursor = conn.cursor()
@@ -109,7 +160,7 @@ def enviar_mensaje_whatsapp(chat_id, texto):
     headers = {'Content-Type': 'application/json'}
     try:
         r = requests.post(url, json=payload, headers=headers)
-        print(f"Respuesta envío: {r.status_code}")
+        print(f"📤 Respuesta envío (Status {r.status_code}): {r.text}")
     except Exception as e:
         print(f"Error al enviar mensaje: {e}")
 
@@ -120,13 +171,11 @@ def health_check():
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    data = request.get_json(silent=True)
-    if not data:
-        return jsonify({"status": "no data"}), 200
-
+    data = request.get_json(silent=True) or {}
+    print(f"📩 PAYLOAD RECIBIDO: {data}")
+    
     type_webhook = data.get("typeWebhook")
     
-    # Procesar solo mensajes entrantes
     if type_webhook in ["incomingMessageReceived", "incomingGroupMessageReceived"]:
         message_data = data.get("messageData", {})
         type_msg = message_data.get("typeMessage")
@@ -138,17 +187,20 @@ def webhook():
             texto = message_data.get("extendedTextMessageData", {}).get("text", "")
             
         texto = texto.strip()
-        chat_id = data.get("senderData", {}).get("chatId")
+        sender_data = data.get("senderData", {})
+        chat_id = sender_data.get("chatId") or data.get("chatId")
         
-        print(f"📥 Mensaje recibido en {chat_id}: {texto}")
+        print(f"📥 MENSAJE LEÍDO: '{texto}' desde ChatID: {chat_id}")
         
         if texto.startswith("!"):
             cmd = texto.lower()
             
             if cmd == "!stock":
-                enviar_mensaje_whatsapp(chat_id, ver_reporte_stock())
+                resp = ver_reporte_stock()
+                enviar_mensaje_whatsapp(chat_id, resp)
             elif cmd == "!taller":
-                enviar_mensaje_whatsapp(chat_id, ver_reporte_taller())
+                resp = ver_reporte_taller()
+                enviar_mensaje_whatsapp(chat_id, resp)
             else:
                 match = re.match(r"^!(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\s*(.+)$", cmd)
                 if match:
