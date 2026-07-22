@@ -1,7 +1,25 @@
 import math
 import sqlite3
 import re
+import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 from whatsapp_chatbot_python import GreenAPIBot, Notification
+
+# --- SERVIDOR WEB EN SEGUNDO PLANO PARA RENDER (100% GRATIS) ---
+class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot de WhatsApp activo y funcionando 24/7")
+
+def run_web_server():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), SimpleHTTPRequestHandler)
+    server.serve_forever()
+
+# Iniciar servidor web en un hilo secundario
+threading.Thread(target=run_web_server, daemon=True).start()
 
 # --- CONEXIÓN A LA BASE DE DATOS COMPARTIDA ---
 DB_NAME = "inventario_led_fijo.db"
@@ -97,7 +115,7 @@ def procesar_mensaje(notification: Notification) -> None:
         notification.answer(ver_reporte_taller())
         return
 
-    # COMANDO: !4x3 pika (Ejemplo: !4x3 pika)
+    # COMANDO: !4x3 pika
     match = re.match(r"^!(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\s+(.+)$", texto)
     if match:
         ancho = float(match.group(1))
@@ -144,7 +162,7 @@ def procesar_mensaje(notification: Notification) -> None:
         notification.answer(resp)
         return
 
-    # MENSAJE DE AYUDA SI EL COMANDO NO ES VÁLIDO
+    # AYUDA
     ayuda = "🤖 *COMANDOS DEL BOT TÉCNICO*\n"
     ayuda += "• `!stock` : Ver módulos libres y en uso\n"
     ayuda += "• `!taller` : Ver componentes rotos\n"
