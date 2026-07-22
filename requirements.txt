@@ -1,2 +1,3 @@
 streamlit
-whatsapp-chatbot-python
+flask
+requests
