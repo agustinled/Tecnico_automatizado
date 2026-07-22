@@ -14,7 +14,7 @@ GREEN_API_URL = f"https://api.green-api.com/waInstance{ID_INSTANCE}"
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- CREACIÓN AUTOMÁTICA DE BASE DE DATOS SI NO EXISTE ---
+# --- CREACIÓN AUTOMÁTICA DE BASE DE DATOS ---
 def inicializar_bd():
     if not os.path.exists(DB_NAME):
         print("⚠️ Base de datos no encontrada. Creándola de forma automática...")
@@ -45,7 +45,6 @@ def inicializar_bd():
             )
         """)
         
-        # Cargar pantallas por defecto
         pantallas_defecto = [
             ('PIKA', 'P4.8 Outdoor (Pika)', 500, 1000, 104, 208, 100, 0, 0, 0),
             ('ROMBO', 'P3.9 Indoor (Rombo)', 500, 500, 128, 128, 80, 0, 0, 0),
@@ -63,9 +62,8 @@ def inicializar_bd():
         
         conn.commit()
         conn.close()
-        print("✅ Base de datos inicializada correctamente con los datos de las pantallas.")
+        print("✅ Base de datos inicializada correctamente.")
 
-# Ejecutar inicializador al arrancar el servidor
 inicializar_bd()
 
 # --- FUNCIONES DE BASE DE DATOS ---
@@ -160,7 +158,7 @@ def enviar_mensaje_whatsapp(chat_id, texto):
     headers = {'Content-Type': 'application/json'}
     try:
         r = requests.post(url, json=payload, headers=headers)
-        print(f"📤 Respuesta envío (Status {r.status_code}): {r.text}")
+        print(f"📤 Envió mensaje a {chat_id} (Status {r.status_code})")
     except Exception as e:
         print(f"Error al enviar mensaje: {e}")
 
@@ -172,35 +170,33 @@ def health_check():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json(silent=True) or {}
-    print(f"📩 PAYLOAD RECIBIDO: {data}")
     
-    type_webhook = data.get("typeWebhook")
+    # Extraer chatId sin importar la variante del evento
+    sender_data = data.get("senderData", {})
+    chat_id = sender_data.get("chatId") or data.get("chatId")
     
-    if type_webhook in ["incomingMessageReceived", "incomingGroupMessageReceived"]:
-        message_data = data.get("messageData", {})
-        type_msg = message_data.get("typeMessage")
-        
-        texto = ""
-        if type_msg == "textMessage":
-            texto = message_data.get("textMessageData", {}).get("textMessage", "")
-        elif type_msg == "extendedTextMessage":
-            texto = message_data.get("extendedTextMessageData", {}).get("text", "")
-            
-        texto = texto.strip()
-        sender_data = data.get("senderData", {})
-        chat_id = sender_data.get("chatId") or data.get("chatId")
-        
-        print(f"📥 MENSAJE LEÍDO: '{texto}' desde ChatID: {chat_id}")
+    # Intentar obtener el texto del mensaje
+    message_data = data.get("messageData", {})
+    type_msg = message_data.get("typeMessage", "")
+    
+    texto = ""
+    if type_msg == "textMessage":
+        texto = message_data.get("textMessageData", {}).get("textMessage", "")
+    elif type_msg == "extendedTextMessage":
+        texto = message_data.get("extendedTextMessageData", {}).get("text", "")
+    
+    texto = texto.strip()
+    
+    if texto and chat_id:
+        print(f"📥 MENSAJE DETECTADO: '{texto}' en ChatID: {chat_id}")
         
         if texto.startswith("!"):
             cmd = texto.lower()
             
             if cmd == "!stock":
-                resp = ver_reporte_stock()
-                enviar_mensaje_whatsapp(chat_id, resp)
+                enviar_mensaje_whatsapp(chat_id, ver_reporte_stock())
             elif cmd == "!taller":
-                resp = ver_reporte_taller()
-                enviar_mensaje_whatsapp(chat_id, resp)
+                enviar_mensaje_whatsapp(chat_id, ver_reporte_taller())
             else:
                 match = re.match(r"^!(\d+(?:\.\d+)?)x(\d+(?:\.\d+)?)\s*(.+)$", cmd)
                 if match:
