@@ -8,8 +8,8 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # --- CREDENCIALES DE GREEN API ---
-ID_INSTANCE = "710722690480"
-API_TOKEN_INSTANCE = "096fbb2829b946db96ca3fb1b2edba66b5c7632d6d904ce79c"
+ID_INSTANCE = "710722691516"
+API_TOKEN_INSTANCE = "a807a932d0c64f24a4fd2469a72a0214c225a4fe2d9c41bcb2"
 GREEN_API_URL = f"https://api.green-api.com/waInstance{ID_INSTANCE}"
 
 DB_NAME = "inventario_led_fijo.db"
