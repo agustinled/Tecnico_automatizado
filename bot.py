@@ -112,7 +112,7 @@ def enviar_mensaje_whatsapp(chat_id, texto):
     headers = {'Content-Type': 'application/json'}
     try:
         r = requests.post(url, json=payload, headers=headers)
-        print(f"📤 Envió mensaje a {chat_id} (Status {r.status_code})")
+        print(f"📤 Respuesta de Green API -> Status: {r.status_code} | Body: {r.text}")
     except Exception as e:
         print(f"❌ Error enviando mensaje a WhatsApp: {e}")
 
@@ -134,15 +134,29 @@ def webhook():
         sender_data = data.get('senderData', {})
         chat_id = sender_data.get('chatId')
         
+        # Extracción blindada del texto para chats individuales y grupales
         text_message = ""
-        if message_data.get('typeMessage') == 'textMessage':
-            text_message = message_data.get('textMessageData', {}).get('textMessage', '').strip()
-        elif message_data.get('typeMessage') == 'extendedTextMessage':
-            text_message = message_data.get('extendedTextMessageData', {}).get('text', '').strip()
+        type_msg = message_data.get('typeMessage')
         
+        if type_msg == 'textMessage':
+            text_message = message_data.get('textMessageData', {}).get('textMessage', '')
+        elif type_msg == 'extendedTextMessage':
+            text_message = message_data.get('extendedTextMessageData', {}).get('text', '')
+        
+        # Búsqueda de respaldo si la variable sigue vacía
+        if not text_message:
+            text_message = (
+                message_data.get('textMessageData', {}).get('textMessage') or
+                message_data.get('extendedTextMessageData', {}).get('text') or
+                ""
+            )
+            
+        text_message = text_message.strip()
         print(f"📥 MENSAJE DETECTADO: '{text_message}' en ChatID: {chat_id}")
         
-        if text_message.lower() == '!stock':
+        # Evaluamos el comando !stock
+        if '!stock' in text_message.lower():
+            print("🚀 Ejecutando respuesta de !stock...")
             respuesta = ver_reporte_stock()
             enviar_mensaje_whatsapp(chat_id, respuesta)
             
