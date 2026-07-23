@@ -14,55 +14,52 @@ GREEN_API_URL = f"https://api.green-api.com/waInstance{ID_INSTANCE}"
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- CREACIÓN AUTOMÁTICA DE BASE DE DATOS ---
+# --- CREACIÓN AUTOMÁTICA DE BASE DE DATOS CON STOCK REAL ---
 def inicializar_bd():
-    if not os.path.exists(DB_NAME):
-        print("⚠️ Base de datos no encontrada. Creándola de forma automática...")
-        conn = sqlite3.connect(DB_NAME)
-        cursor = conn.cursor()
-        
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS inventario (
-                partida TEXT PRIMARY KEY,
-                nombre_largo TEXT,
-                ancho_mm REAL,
-                alto_mm REAL,
-                px_ancho INTEGER,
-                px_alto INTEGER,
-                gabs_comprados_total INTEGER,
-                gabs_rotos INTEGER DEFAULT 0,
-                ladrillos_en_reparacion INTEGER DEFAULT 0,
-                ladrillos_esperando INTEGER DEFAULT 0
-            )
-        """)
-        
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS salones (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                partida TEXT,
-                salon TEXT,
-                gabs_usados INTEGER
-            )
-        """)
-        
-        pantallas_defecto = [
-            ('PIKA', 'P4.8 Outdoor (Pika)', 500, 1000, 104, 208, 100, 0, 0, 0),
-            ('ROMBO', 'P3.9 Indoor (Rombo)', 500, 500, 128, 128, 80, 0, 0, 0),
-            ('UNI 500', 'P2.9 Indoor (Uni 500)', 500, 500, 168, 168, 60, 0, 0, 0),
-            ('UNI 1000', 'P2.9 Indoor (Uni 1000)', 500, 1000, 168, 336, 40, 0, 0, 0),
-            ('BLACKFACE', 'P3.9 Outdoor BlackFace', 500, 1000, 128, 256, 50, 0, 0, 0),
-            ('NUEVA NUEVA', 'P2.6 High Refresh', 500, 500, 192, 192, 50, 0, 0, 0)
-        ]
-        
-        cursor.executemany("""
-            INSERT OR IGNORE INTO inventario 
-            (partida, nombre_largo, ancho_mm, alto_mm, px_ancho, px_alto, gabs_comprados_total, gabs_rotos, ladrillos_en_reparacion, ladrillos_esperando)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, pantallas_defecto)
-        
-        conn.commit()
-        conn.close()
-        print("✅ Base de datos inicializada correctamente.")
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS inventario (
+            partida TEXT PRIMARY KEY,
+            nombre_largo TEXT,
+            ancho_mm REAL,
+            alto_mm REAL,
+            px_ancho INTEGER,
+            px_alto INTEGER,
+            gabs_comprados_total INTEGER,
+            gabs_rotos INTEGER DEFAULT 0,
+            ladrillos_en_reparacion INTEGER DEFAULT 0,
+            ladrillos_esperando INTEGER DEFAULT 0
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS salones (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partida TEXT,
+            salon TEXT,
+            gabs_usados INTEGER
+        )
+    """)
+    
+    # DATOS REALES DE TU INVENTARIO EXACTO
+    pantallas_reales = [
+        ('ROMBO', 'P3.9 Indoor (Rombo)', 500, 500, 128, 128, 192, 0, 0, 0),
+        ('PIKA', 'P4.8 Outdoor (Pika)', 500, 500, 104, 104, 336, 0, 0, 0),
+        ('UNI 500', 'P2.9 Indoor (Uni 500)', 500, 500, 168, 168, 240, 0, 0, 0),
+        ('UNI 1000', 'P2.9 Indoor (Uni 1000)', 500, 1000, 168, 336, 480, 0, 0, 0)
+    ]
+    
+    # Reemplaza o actualiza manteniendo tus modelos reales
+    cursor.executemany("""
+        INSERT OR REPLACE INTO inventario 
+        (partida, nombre_largo, ancho_mm, alto_mm, px_ancho, px_alto, gabs_comprados_total, gabs_rotos, ladrillos_en_reparacion, ladrillos_esperando)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, pantallas_reales)
+    
+    conn.commit()
+    conn.close()
 
 inicializar_bd()
 
@@ -171,11 +168,9 @@ def health_check():
 def webhook():
     data = request.get_json(silent=True) or {}
     
-    # Extraer chatId sin importar la variante del evento
     sender_data = data.get("senderData", {})
     chat_id = sender_data.get("chatId") or data.get("chatId")
     
-    # Intentar obtener el texto del mensaje
     message_data = data.get("messageData", {})
     type_msg = message_data.get("typeMessage", "")
     
@@ -206,8 +201,7 @@ def webhook():
                     
                     mapa_modelos = {
                         "PIKA": "PIKA", "ROMBO": "ROMBO", "UNI500": "UNI 500",
-                        "UNI 500": "UNI 500", "UNI1000": "UNI 1000", "UNI 1000": "UNI 1000",
-                        "BLACKFACE": "BLACKFACE", "NUEVA": "NUEVA NUEVA", "NUEVA NUEVA": "NUEVA NUEVA"
+                        "UNI 500": "UNI 500", "UNI1000": "UNI 1000", "UNI 1000": "UNI 1000"
                     }
                     partida = mapa_modelos.get(modelo_buscado, modelo_buscado)
                     mod = obtener_datos_partida(partida)
