@@ -14,7 +14,7 @@ GREEN_API_URL = f"https://api.green-api.com/waInstance{ID_INSTANCE}"
 
 DB_NAME = "inventario_led_fijo.db"
 
-# --- CREACIÓN AUTOMÁTICA DE BASE DE DATOS CON STOCK REAL ---
+# --- CREACIÓN AUTOMÁTICA DE BASE DE DATOS CON STOCK REAL COMPLETO ---
 def inicializar_bd():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -43,15 +43,16 @@ def inicializar_bd():
         )
     """)
     
-    # DATOS REALES DE TU INVENTARIO EXACTO
+    # INVENTARIO REAL AJUSTADO (1 MOD 96 = 1 M²)
     pantallas_reales = [
-        ('ROMBO', 'P3.9 Indoor (Rombo)', 500, 500, 128, 128, 192, 0, 0, 0),
-        ('PIKA', 'P4.8 Outdoor (Pika)', 500, 500, 104, 104, 336, 0, 0, 0),
-        ('UNI 500', 'P2.9 Indoor (Uni 500)', 500, 500, 168, 168, 240, 0, 0, 0),
-        ('UNI 1000', 'P2.9 Indoor (Uni 1000)', 500, 1000, 168, 336, 480, 0, 0, 0)
+        ('ROMBO', ' (Rombo)', 500, 500, 128, 128, 192, 0, 0, 0),
+        ('PIKA', ' (Pika)', 500, 500, 104, 104, 336, 0, 0, 0),
+        ('UNI 500', ' (Uni 500)', 500, 500, 168, 168, 240, 0, 0, 0),
+        ('UNI 1000', ' (Uni 1000)', 500, 1000, 168, 336, 480, 0, 0, 0),
+        ('BLACKFACE', ' (96x96)', 1000, 1000, 240, 240, 98, 0, 0, 0),
+        ('NUEVA NUEVA', ' (96x96)', 1000, 1000, 240, 240, 54, 0, 0, 0)
     ]
     
-    # Reemplaza o actualiza manteniendo tus modelos reales
     cursor.executemany("""
         INSERT OR REPLACE INTO inventario 
         (partida, nombre_largo, ancho_mm, alto_mm, px_ancho, px_alto, gabs_comprados_total, gabs_rotos, ladrillos_en_reparacion, ladrillos_esperando)
@@ -115,7 +116,7 @@ def ver_reporte_stock():
             p = obtener_datos_partida(p_id)
             if p:
                 reporte += f"🔹 *{p['nombre']}*\n"
-                reporte += f"  • Libres en cajón: {p['disponibles_gabs']} gabs ({p['disponibles_gabs']*p['m2_por_gab']:.2f} m²)\n"
+                reporte += f"  • Libres en cajón: {p['disponibles_gabs']} gabs ({p['disponibles_gabs']*p['m2_por_gab']:.1f} m²)\n"
                 reporte += f"  • En uso salones: {p['en_uso_gabs']} gabs\n"
                 reporte += f"  • En Taller: {p['rotos_gabs']} gabs\n"
                 reporte += f"----------------------------------\n"
@@ -201,7 +202,8 @@ def webhook():
                     
                     mapa_modelos = {
                         "PIKA": "PIKA", "ROMBO": "ROMBO", "UNI500": "UNI 500",
-                        "UNI 500": "UNI 500", "UNI1000": "UNI 1000", "UNI 1000": "UNI 1000"
+                        "UNI 500": "UNI 500", "UNI1000": "UNI 1000", "UNI 1000": "UNI 1000",
+                        "BLACKFACE": "BLACKFACE", "NUEVA": "NUEVA NUEVA", "NUEVA NUEVA": "NUEVA NUEVA"
                     }
                     partida = mapa_modelos.get(modelo_buscado, modelo_buscado)
                     mod = obtener_datos_partida(partida)
@@ -219,7 +221,7 @@ def webhook():
                         resp = f"📺 *CÁLCULO DE PANTALLA ({mod['nombre']})*\n"
                         resp += f"----------------------------------\n"
                         resp += f"📐 Solicitado: {ancho}m x {alto}m\n"
-                        resp += f"🧱 Estructura Real: {gabs_ancho}x{gabs_alto} ({total_necesarios} gabs | {m2_reales:.2f} m²)\n"
+                        resp += f"🧱 Estructura Real: {gabs_ancho}x{gabs_alto} ({total_necesarios} gabs | {m2_reales:.1f} m²)\n"
                         resp += f"🔌 Líneas Cat6 (NovaStar): {cables_main} puerto(s) Main\n"
                         resp += f"----------------------------------\n"
                         
