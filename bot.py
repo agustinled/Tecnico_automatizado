@@ -125,38 +125,28 @@ def home():
 def webhook():
     data = request.get_json(silent=True)
     if not data:
-        return jsonify({"status": "error", "message": "No JSON data"}), 400
+        return jsonify({"status": "error"}), 400
 
     type_webhook = data.get('typeWebhook')
+    print(f"🔔 TIPO DE WEBHOOK RECIBIDO: {type_webhook}")
     
-    if type_webhook == 'incomingMessageReceived':
+    # Soporte completo para chats privados y grupales
+    if type_webhook in ['incomingMessageReceived', 'incomingGroupMessageReceived']:
         message_data = data.get('messageData', {})
         sender_data = data.get('senderData', {})
         chat_id = sender_data.get('chatId')
         
-        # Extracción blindada del texto para chats individuales y grupales
-        text_message = ""
-        type_msg = message_data.get('typeMessage')
+        # Extraer texto de cualquier estructura
+        text_message = (
+            message_data.get('textMessageData', {}).get('textMessage') or
+            message_data.get('extendedTextMessageData', {}).get('text') or
+            ""
+        ).strip()
         
-        if type_msg == 'textMessage':
-            text_message = message_data.get('textMessageData', {}).get('textMessage', '')
-        elif type_msg == 'extendedTextMessage':
-            text_message = message_data.get('extendedTextMessageData', {}).get('text', '')
+        print(f"📥 MENSAJE DETECTADO: '{text_message}' | ChatID: {chat_id}")
         
-        # Búsqueda de respaldo si la variable sigue vacía
-        if not text_message:
-            text_message = (
-                message_data.get('textMessageData', {}).get('textMessage') or
-                message_data.get('extendedTextMessageData', {}).get('text') or
-                ""
-            )
-            
-        text_message = text_message.strip()
-        print(f"📥 MENSAJE DETECTADO: '{text_message}' en ChatID: {chat_id}")
-        
-        # Evaluamos el comando !stock
         if '!stock' in text_message.lower():
-            print("🚀 Ejecutando respuesta de !stock...")
+            print("🚀 Enviando reporte de stock...")
             respuesta = ver_reporte_stock()
             enviar_mensaje_whatsapp(chat_id, respuesta)
             
